@@ -6,7 +6,7 @@
 int main(int argc, char *argv[])
 {
     int rank,numprocs;
-    MPI_Init(argc, argv);
+    MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     int i, done = 0, n, count;
@@ -19,6 +19,9 @@ int main(int argc, char *argv[])
     {   if(rank==0){
             printf("Enter the number of points: (0 quits) \n");
             scanf("%d",&n);
+            acu=0;
+            rep=0;
+            fin=0;
             if(n!=0){
                rep=n/numprocs; 
             }else{
@@ -28,11 +31,14 @@ int main(int argc, char *argv[])
                 MPI_Send(&rep,1,MPI_INT,i,0,MPI_COMM_WORLD);
                 acu=acu+rep;
             }
-            rep=n-acu;//para los que queden
+            if(n!=0){
+                rep=n-acu;
+            }//para los que queden
 
         }else{
             MPI_Recv(&rep,1,MPI_INT,0,0,MPI_COMM_WORLD,&status);
         }
+
         if (rep == 0) break;
 
         count = 0;  
@@ -54,7 +60,7 @@ int main(int argc, char *argv[])
 
         if(rank==0){
             for(int i=1;i<numprocs;i++){
-                MPI_Recv(&fin,1,MPI_INT,i,0,MPI_COMM_WORLD,&status);
+                MPI_Recv(&fin,1,MPI_INT,MPI_ANY_SOURCE,MPI_ANY_TAG,MPI_COMM_WORLD,&status);
                 count+=fin;
             }
             pi = ((double) count/(double) n)*4.0;
@@ -65,4 +71,5 @@ int main(int argc, char *argv[])
         }
 
     }
+    MPI_Finalize();
 }
