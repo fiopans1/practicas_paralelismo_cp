@@ -10,17 +10,15 @@ int MPI_FlattreeColective(void *sendbuf, void *recvbuf, int count,MPI_Datatype d
     MPI_Comm_rank(comm, &rank);
     MPI_Comm_size(comm, &numprocs);
     if(rank==root){
-        for(int i=0;i<numprocs;i++){
-            if(i!=root){
-                MPI_Recv(&rep,count,datatype,i, MPI_ANY_TAG,comm,&status);
+        for(int i=1;i<numprocs;i++){
+                MPI_Recv(&rep,count,datatype,MPI_ANY_SOURCE, MPI_ANY_TAG,comm,&status);
                 if(error!= MPI_SUCCESS){return error;}
-                *acu +=rep; 
-            }    
+                *acu +=rep;     
         }
         *acu+= *(int*) sendbuf; 
 
     }else{
-        error = MPI_Send(sendbuf,count,datatype,root,rank,comm);
+        error = MPI_Send(sendbuf,count,datatype,root,0,comm);
         if(error!= MPI_SUCCESS){return error;}
     }
     return MPI_SUCCESS;
