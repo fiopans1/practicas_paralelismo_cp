@@ -2,29 +2,31 @@
 #include <stdlib.h>
 #include <math.h>
 #include <mpi.h>
-int MPI_FattreeColective(const void *sendbuf, void *recvbuf, int count,MPI_Datatype datatype, MPI_Op op, int root,MPI_Comm comm){
-    int error,rank,numprocs,acu=0,rep;
+
+int MPI_FlattreeColective(void *sendbuf, void *recvbuf, int count,MPI_Datatype datatype, MPI_Op op, int root,MPI_Comm comm){
+    int error,rank,numprocs,rep;
+    int *acu = recvbuf;
+    MPI_Status status;
     MPI_Comm_rank(comm, &rank);
     MPI_Comm_size(comm, &numprocs);
     if(rank==root){
-        MPI_Status status;
         for(int i=0;i<numprocs;i++){
             if(i!=root){
-                MPI_Recv(&rep,count,datatype,i,MPI_ANY_TAG,comm,&status);
+                MPI_Recv(&rep,count,datatype,i, MPI_ANY_TAG,comm,&status);
                 if(error!= MPI_SUCCESS){return error;}
-                acu+=rep;
-            }
+                *acu +=rep; 
+            }    
         }
-        printf("llegue");
-        recvbuf= (acu+((int*)recvbuf));
+        *acu+= *(int*) sendbuf; 
 
     }else{
-        error = MPI_Send(sendbuf,count,datatype,root,MPI_ANY_TAG,comm);
+        error = MPI_Send(sendbuf,count,datatype,root,rank,comm);
         if(error!= MPI_SUCCESS){return error;}
     }
     return MPI_SUCCESS;
 
 }
+
 int main(int argc, char *argv[])
 {
     int rank,numprocs;
@@ -49,7 +51,7 @@ int main(int argc, char *argv[])
                 rep=0;
             }
         }
-        
+
         MPI_Bcast(&rep,1,MPI_INT,0,MPI_COMM_WORLD);
 
         if(rank==0){
@@ -78,8 +80,8 @@ int main(int argc, char *argv[])
             }
 
         }
-        MPI_Reduce(&count,&fin,1,MPI_INT,MPI_SUM,0,MPI_COMM_WORLD);
-        //MPI_FattreeColective(&count,&fin,1,MPI_INT,MPI_SUM,0,MPI_COMM_WORLD);
+        //MPI_Reduce(&count,&fin,1,MPI_INT,MPI_SUM,0,MPI_COMM_WORLD);
+        MPI_FlattreeColective(&count,&fin,1,MPI_INT,MPI_SUM,0,MPI_COMM_WORLD);
         if(rank==0){
             printf("%d",fin);
             pi = ((double) fin/(double) n)*4.0;
