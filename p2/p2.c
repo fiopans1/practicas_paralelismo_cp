@@ -10,19 +10,61 @@ int MPI_FlattreeColective(void *sendbuf, void *recvbuf, int count,MPI_Datatype d
     MPI_Comm_rank(comm, &rank);
     MPI_Comm_size(comm, &numprocs);
     if(rank==root){
+        *acu=0;
         for(int i=1;i<numprocs;i++){
-                MPI_Recv(&rep,count,datatype,MPI_ANY_SOURCE, MPI_ANY_TAG,comm,&status);
-                if(error!= MPI_SUCCESS){return error;}
-                *acu +=rep;     
+            error = MPI_Recv(&rep,count,datatype,MPI_ANY_SOURCE, MPI_ANY_TAG,comm,&status);
+            if(error!= MPI_SUCCESS){return error;}
+            *acu +=rep;     
         }
-        *acu+= *(int*) sendbuf; 
+        *acu+= *(int*) sendbuf;
 
     }else{
-        error = MPI_Send(sendbuf,count,datatype,root,0,comm);
+        error = MPI_Send(sendbuf,count,datatype,root,rank,comm);
         if(error!= MPI_SUCCESS){return error;}
     }
     return MPI_SUCCESS;
 
+}
+long ipow(long base, int exp)
+{
+    long res = 1;
+    for (;;)
+    {
+        if (exp & 1)
+            res *= base;
+        exp >>= 1;
+        if (!exp)
+            break;
+        base *= base;
+    }
+
+    return res;
+}
+
+int MPI_BinomialColectiva(void *buffer, int count, MPI_Datatype datatype,int root, MPI_Comm comm){
+    int rank,numprocs,error;
+    MPI_Comm_rank(comm, &rank);
+    MPI_Comm_size(comm, &numprocs);
+    MPI_Status status;
+    if(rank!=0){
+        error= MPI_Recv(buffer,count,datatype,MPI_ANY_SOURCE, MPI_ANY_TAG,comm,&status);
+        if(error!=MPI_SUCCESS){
+            return error;
+        }
+    }
+    for(int i=0;;i++){
+        if(rank<ipow(2,i)){
+            if(rank+ipow(2,i)>=numprocs){
+                return MPI_SUCCESS;
+            }
+            error=MPI_Send(buffer,count,datatype,rank+ipow(2,i),0,comm);
+            if(error!=MPI_SUCCESS){
+                return error;
+            }
+
+        }
+    }
+    return MPI_SUCCESS;
 }
 
 int main(int argc, char *argv[])
@@ -51,6 +93,7 @@ int main(int argc, char *argv[])
         }
 
         MPI_Bcast(&rep,1,MPI_INT,0,MPI_COMM_WORLD);
+        //MPI_BinomialColectiva(&rep,1,MPI_INT,0,MPI_COMM_WORLD);
 
         if(rank==0){
             if(n!=0){//modificamos rep solo para 0
@@ -59,7 +102,6 @@ int main(int argc, char *argv[])
                 rep=0;
             }
         }
-        printf("%d\n",rep);
         if (rep == 0) break;
 
         count = 0;  
@@ -78,10 +120,9 @@ int main(int argc, char *argv[])
             }
 
         }
-        //MPI_Reduce(&count,&fin,1,MPI_INT,MPI_SUM,0,MPI_COMM_WORLD);
-        MPI_FlattreeColective(&count,&fin,1,MPI_INT,MPI_SUM,0,MPI_COMM_WORLD);
+        MPI_Reduce(&count,&fin,1,MPI_INT,MPI_SUM,0,MPI_COMM_WORLD);
+        //MPI_FlattreeColective(&count,&fin,1,MPI_INT,MPI_SUM,0,MPI_COMM_WORLD);
         if(rank==0){
-            printf("%d",fin);
             pi = ((double) fin/(double) n)*4.0;
 
             printf("pi is approx. %.16f, Error is %.16f\n", pi, fabs(pi - PI25DT));
