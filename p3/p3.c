@@ -8,6 +8,7 @@
 
 #define N 1024
 
+
 int main(int argc, char *argv[] ) {
     int rank,numprocs;
     MPI_Init(&argc, &argv);
@@ -30,19 +31,19 @@ int main(int argc, char *argv[] ) {
         }
     }
     MPI_Bcast(&vector,N,MPI_FLOAT,0,MPI_COMM_WORLD);
-    //MPI_Scatter(&matrix,N*N,MPI_FLOAT,&matrix_Aux,(N/numprocs)*N,MPI_FLOAT,0,MPI_COMM_WORLD);
+    MPI_Scatter(&matrix,(N/numprocs)*N,MPI_FLOAT,&matrix_Aux,(N/numprocs)*N,MPI_FLOAT,0,MPI_COMM_WORLD);
     if(rank==0) gettimeofday(&tv1, NULL);
 
-    /*for(i=0;i<(N/numprocs);i++) {
+    for(i=0;i<(N/numprocs);i++) {
         result[i]=0;
         for(j=0;j<N;j++) {
             result[i] += matrix_Aux[i][j]*vector[j];
         }
-    }*/
+    }
 
     if(rank==0) gettimeofday(&tv2, NULL);
-    //MPI_Gather(result,(N/numprocs),MPI_FLOAT,result2,N,MPI_FLOAT,0,MPI_COMM_WORLD);
-    /*if(rank==0){
+    MPI_Gather(result,(N/numprocs),MPI_FLOAT,result2,(N/numprocs),MPI_FLOAT,0,MPI_COMM_WORLD);
+    if(rank==0){
         int microseconds = (tv2.tv_usec - tv1.tv_usec)+ 1000000 * (tv2.tv_sec - tv1.tv_sec);
 
         //Display result
@@ -53,8 +54,8 @@ int main(int argc, char *argv[] ) {
         } else {
         printf ("Time (seconds) = %lf\n", (double) microseconds/1E6);
         }    
-    }*/
-
+    }
+    printf("\n");
     MPI_Finalize();
     return 0;
 }
