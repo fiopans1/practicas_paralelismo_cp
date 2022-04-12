@@ -6,7 +6,7 @@
 
 
 
-#define N 1024
+#define N 512
 
 
 int main(int argc, char *argv[] ) {
