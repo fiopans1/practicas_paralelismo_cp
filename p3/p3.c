@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <sys/time.h>
 #include <mpi.h>
-
+#include <stdlib.h>
 #define DEBUG 1
 
 
@@ -15,8 +15,9 @@ int main(int argc, char *argv[] ) {
     MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     int i, j;
-    float matrix[N][N];
-    float matrix_Aux[N][N];//luego adaptar tamaño de matrix_Aux a lo que recibe cada proceso
+
+    float *matrix = (float *) malloc(sizeof(float)*N*N);
+    float *matrix_Aux = (float *) malloc(sizeof(float)*N*N);//luego adaptar tamaño de matrix_Aux a lo que recibe cada proceso
     float vector[N];
     float result[N];
     float result2[N];
@@ -26,18 +27,18 @@ int main(int argc, char *argv[] ) {
         for(i=0;i<N;i++) {
         vector[i] = i;
             for(j=0;j<N;j++) {
-                matrix[i][j] = i+j;
+                matrix[i*N+j] = i+j;
             }
         }
     }
     MPI_Bcast(&vector,N,MPI_FLOAT,0,MPI_COMM_WORLD);
-    MPI_Scatter(&matrix,(N/numprocs)*N,MPI_FLOAT,&matrix_Aux,(N/numprocs)*N,MPI_FLOAT,0,MPI_COMM_WORLD);
+    MPI_Scatter(matrix,(N/numprocs)*N,MPI_FLOAT,matrix_Aux,(N/numprocs)*N,MPI_FLOAT,0,MPI_COMM_WORLD);
     if(rank==0) gettimeofday(&tv1, NULL);
 
     for(i=0;i<(N/numprocs);i++) {
         result[i]=0;
         for(j=0;j<N;j++) {
-            result[i] += matrix_Aux[i][j]*vector[j];
+            result[i] += matrix_Aux[i*N+j]*vector[j];
         }
     }
 
