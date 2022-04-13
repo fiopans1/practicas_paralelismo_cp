@@ -6,7 +6,7 @@
 
 
 
-#define N 512
+#define N 1024
 
 
 int main(int argc, char *argv[] ) {
@@ -18,9 +18,10 @@ int main(int argc, char *argv[] ) {
 
     float *matrix = (float *) malloc(sizeof(float)*N*N);
     float *matrix_Aux = (float *) malloc(sizeof(float)*N*N);//luego adaptar tamaño de matrix_Aux a lo que recibe cada proceso
-    float vector[N];
-    float result[N];
-    float result2[N];
+    float *vector=(float *) malloc(sizeof(float)*N);
+    float *result=(float *) malloc(sizeof(float)*N);
+    float *result2=(float *) malloc(sizeof(float)*N);
+
     struct timeval  tv1, tv2;
     if(rank==0){
         /* Initialize Matrix and Vector */
@@ -31,7 +32,7 @@ int main(int argc, char *argv[] ) {
             }
         }
     }
-    MPI_Bcast(&vector,N,MPI_FLOAT,0,MPI_COMM_WORLD);
+    MPI_Bcast(vector,N,MPI_FLOAT,0,MPI_COMM_WORLD);
     MPI_Scatter(matrix,(N/numprocs)*N,MPI_FLOAT,matrix_Aux,(N/numprocs)*N,MPI_FLOAT,0,MPI_COMM_WORLD);
     if(rank==0) gettimeofday(&tv1, NULL);
 
@@ -56,6 +57,11 @@ int main(int argc, char *argv[] ) {
         printf ("Time (seconds) = %lf\n", (double) microseconds/1E6);
         }    
     }
+    free(matrix);
+    free(matrix_Aux);
+    free(vector);
+    free(result);
+    free(result2);
     printf("\n");
     MPI_Finalize();
     return 0;
