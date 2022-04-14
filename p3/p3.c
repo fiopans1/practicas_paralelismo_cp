@@ -2,7 +2,7 @@
 #include <sys/time.h>
 #include <mpi.h>
 #include <stdlib.h>
-#define DEBUG 0
+#define DEBUG 1
 
 
 
