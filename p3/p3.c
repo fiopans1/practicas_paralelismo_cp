@@ -6,7 +6,7 @@
 
 
 
-#define N 1024
+#define N 5
 
 
 int main(int argc, char *argv[] ) {
@@ -42,10 +42,21 @@ int main(int argc, char *argv[] ) {
             result[i] += matrix_Aux[i*N+j]*vector[j];
         }
     }
+    if(rank==0){
+        for(i=((numprocs*(N/numprocs))-1);i<N;i++) {
+            result[i]=0;
+            for(j=0;j<N;j++) {
+                result[i] += matrix[i*N+j]*vector[j];
+            }
+        }
+    }
 
     if(rank==0) gettimeofday(&tv2, NULL);
     MPI_Gather(result,(N/numprocs),MPI_FLOAT,result2,(N/numprocs),MPI_FLOAT,0,MPI_COMM_WORLD);
     if(rank==0){
+        for(i=((numprocs*(N/numprocs))-1);i<N;i++){
+            result2[i]=result[i];
+        }
         int microseconds = (tv2.tv_usec - tv1.tv_usec)+ 1000000 * (tv2.tv_sec - tv1.tv_sec);
 
         //Display result
