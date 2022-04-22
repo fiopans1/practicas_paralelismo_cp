@@ -92,8 +92,8 @@ int main(int argc, char *argv[])
             }
         }
 
-        MPI_Bcast(&rep,1,MPI_INT,0,MPI_COMM_WORLD);
-        //MPI_BinomialColectiva(&rep,1,MPI_INT,0,MPI_COMM_WORLD);
+        //MPI_Bcast(&rep,1,MPI_INT,0,MPI_COMM_WORLD);
+        MPI_BinomialColectiva(&rep,1,MPI_INT,0,MPI_COMM_WORLD);
 
         if(rank==0){
             if(n!=0){//modificamos rep solo para 0
@@ -120,8 +120,8 @@ int main(int argc, char *argv[])
             }
 
         }
-        MPI_Reduce(&count,&fin,1,MPI_INT,MPI_SUM,0,MPI_COMM_WORLD);
-        //MPI_FlattreeColective(&count,&fin,1,MPI_INT,MPI_SUM,0,MPI_COMM_WORLD);
+        //MPI_Reduce(&count,&fin,1,MPI_INT,MPI_SUM,0,MPI_COMM_WORLD);
+        MPI_FlattreeColective(&count,&fin,1,MPI_INT,MPI_SUM,0,MPI_COMM_WORLD);
         if(rank==0){
             pi = ((double) fin/(double) n)*4.0;
 

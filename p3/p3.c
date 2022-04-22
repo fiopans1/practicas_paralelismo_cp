@@ -19,7 +19,7 @@ int main(int argc, char *argv[] ) {
     float *vector=(float *) malloc(sizeof(float)*N);
     float *result=(float *) malloc(sizeof(float)*N);//este se podria optimizar un poco más el tamaño pero eso ya a mayores
 
-    struct timeval  tv1, tv2,tv3,tv4,tv5,tv6,tv7,tv8;
+    struct timeval  tv1, tv2,tv3,tv4,tv5,tv6,tv7;
     if(rank==0){
         float *matrix = (float *) malloc(sizeof(float)*N*N);
         /* Initialize Matrix and Vector */
@@ -43,10 +43,12 @@ int main(int argc, char *argv[] ) {
         gettimeofday(&tv4, NULL);
         free(matrix);
     }else{
+        gettimeofday(&tv3, NULL);
         MPI_Bcast(vector,N,MPI_FLOAT,0,MPI_COMM_WORLD);
         MPI_Scatter(NULL,0,MPI_FLOAT,matrix_Aux,(N/numprocs)*N,MPI_FLOAT,0,MPI_COMM_WORLD);
+        gettimeofday(&tv4, NULL);
     }
-    if(rank==0) gettimeofday(&tv1, NULL);
+    gettimeofday(&tv1, NULL);
 
     for(i=0;i<(N/numprocs);i++) {
         result[i]=0;
@@ -55,7 +57,7 @@ int main(int argc, char *argv[] ) {
         }
     }
 
-    if(rank==0) gettimeofday(&tv2, NULL);
+    gettimeofday(&tv2, NULL);
     if(rank==0){
         float *result2=(float *) malloc(sizeof(float)*N);
         gettimeofday(&tv6, NULL);
@@ -76,14 +78,22 @@ int main(int argc, char *argv[] ) {
             printf(" %f \t ",result2[i]);
         }
         } else {
-        printf ("Tiempo de trabajo de cada proceso (seconds) = %lf\n", (double) microseconds/1E6);
-        printf ("Tiempo restante proceso 0 (seconds) = %lf\n", (double) microseconds2/1E6);
-        printf ("Tiempo comunicaciones (seconds) = %lf\n", (double) (microseconds3+microseconds4)/1E6);
+        printf ("Tiempo de trabajo de cl proceso %d (seconds) = %lf\n",rank, (double) (microseconds2+microseconds)/1E6);
+        printf ("Tiempo comunicaciones del proceso %d (seconds) = %lf\n",rank, (double) (microseconds3+microseconds4)/1E6);
         }    
         free(result2);
         printf("\n");
     }else{
+        gettimeofday(&tv6, NULL);
         MPI_Gather(result,(N/numprocs),MPI_FLOAT,NULL,0,MPI_FLOAT,0,MPI_COMM_WORLD);
+        gettimeofday(&tv7, NULL);  
+        int microseconds = (tv2.tv_usec - tv1.tv_usec)+ 1000000 * (tv2.tv_sec - tv1.tv_sec);
+        int microseconds2 = (tv4.tv_usec - tv3.tv_usec)+ 1000000 * (tv4.tv_sec - tv3.tv_sec);
+        int microseconds4 = (tv7.tv_usec - tv6.tv_usec)+ 1000000 * (tv7.tv_sec - tv6.tv_sec); 
+        if(!DEBUG){
+            printf ("Tiempo de trabajo de cl proceso %d (seconds) = %lf\n",rank, (double) (microseconds)/1E6);
+            printf ("Tiempo comunicaciones del proceso %d (seconds) = %lf\n",rank, (double) (microseconds4+microseconds2)/1E6);
+        }    
     }
     free(matrix_Aux);
     free(vector);
