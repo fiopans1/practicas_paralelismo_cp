@@ -78,7 +78,7 @@ int main(int argc, char *argv[] ) {
             printf(" %f \t ",result2[i]);
         }
         } else {
-        printf ("Tiempo de trabajo de cl proceso %d (seconds) = %lf\n",rank, (double) (microseconds2+microseconds)/1E6);
+        printf ("Tiempo de trabajo del proceso %d (seconds) = %lf\n",rank, (double) (microseconds2+microseconds)/1E6);
         printf ("Tiempo comunicaciones del proceso %d (seconds) = %lf\n",rank, (double) (microseconds3+microseconds4)/1E6);
         }    
         free(result2);
@@ -91,7 +91,7 @@ int main(int argc, char *argv[] ) {
         int microseconds2 = (tv4.tv_usec - tv3.tv_usec)+ 1000000 * (tv4.tv_sec - tv3.tv_sec);
         int microseconds4 = (tv7.tv_usec - tv6.tv_usec)+ 1000000 * (tv7.tv_sec - tv6.tv_sec); 
         if(!DEBUG){
-            printf ("Tiempo de trabajo de cl proceso %d (seconds) = %lf\n",rank, (double) (microseconds)/1E6);
+            printf ("Tiempo de trabajo del proceso %d (seconds) = %lf\n",rank, (double) (microseconds)/1E6);
             printf ("Tiempo comunicaciones del proceso %d (seconds) = %lf\n",rank, (double) (microseconds4+microseconds2)/1E6);
         }    
     }
